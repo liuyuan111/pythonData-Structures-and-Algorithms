@@ -1,3 +1,5 @@
+# pythonData-Structures-and-Algorithms
+
 # 一、算法复杂度    
 O(1)、O(log n),O(n),O(n log n),O(n<sup>2</sup>),O(n<sup>3</sup>),O(n<sup>n</sup>)
 
@@ -379,4 +381,378 @@ python的list及其操作来实现栈：
 
 
 
-# pythonData-Structures-and-Algorithms
+# 七、二叉树和树
+## 1.二叉树     
+是节点的有穷集合。包含一个根节点，其余节点分属两颗不相交的二叉树，分别是根节点的左子树和右子树
+
++ 路径，数从根节点到任意一个节点都有路径，且唯一。
++ 二叉树是层次结构，树根看作做高层元素，规定跟层数为0。
++ 高度（深度）：根节点高度为0。
+
+## 2.二叉树性质
+1. 在非空二叉树第i层至多有 **2<sup>i</sup>** 个节点(i>=0)
+2. 高度为h的二叉树至多有 **2<sup>h+1</sup>-1** 个节点(h>=0)
+3. 对于任何非空二叉树T，其他节点个数为n<sub>0</sub>，度数为二的节点个数为n<sub>2</sub>，那么n<sub>0</sub> = n<sub>2</sub> +1
+
+## 3.满二叉树，扩充二叉树
+1. 满二叉树：二叉树中所有分支节点度数为2，满二叉树是一般二叉树的一个子集。    
+满二叉树的节点比分支节点多一个
+
+2. 扩充二叉树：对二叉树T，加入足够多的节点，使其变为满二叉树T2。T2称为T的扩充二叉树。
+
+3.完全二叉树：对一个高度h的二叉树，第0到h-1层的节点都满，而最后一层不满，且节点在左边，空位在右边。     
+性质：  
+1.n个节点的完全二叉树高度**h=[log<sub>2</sub>n]**     
+2.n个节点的完全二叉树，按照从上到下从左到右的顺序从0开始编号，对任意节点i(0<=i<=n-1)都有
++ 序号为0的是根
++ 对i>0，父节点编号为(i-1)/2
++ `2*i+1<n`,左子节点序号为2*i+1,否则无左子节点
++ `2*i+2<n`,右子节点序号为2*i+2，否则无右子节点
+
+
+## 3.抽象数据类型
+
+    ADT BinTree:
+        BinTree(self,data,left,right)       #构造操作，创建二叉树
+        is_empty(self)                      #判断是否为空
+        num_nodes(self)                     #求二叉树节点个数
+        data(self)                          #获取二叉树根存储的数据                     
+        left(self)                          #左子树
+        right(self)                         #右子树
+        set_left(self,btree)                #用btree代替原左子树
+        set_right(self,btree)               #用btree代替原右子树
+        traversal(self)                     #遍历二叉树中个节点数据的迭代器
+        forall(self,op)                     #对二叉树的每个节点进行op操作
+
+## 4.遍历二叉树
++ 深度优先:顺着一条路尽可能往下走，必要时回溯
+
+    + 先根序遍历(DLR顺序)
+    + 中根序遍历(LDR)
+    + 后根序遍历(LRD)
++ 宽度优先：按层次逐层访问树中各节点。
+
+## 5.二叉树的list实现
+二叉树是递归结构
++ 空树用None表示
++ 非空二叉树用包含三个元素的表[d,l,r]表示,d表示根节点元素，l和r两颗子树     
+例如：
+
+        ['A',
+            ['B',None,None],
+            ['C',
+                ['D',['F',None,None],
+                    ['G',None,None]],
+                ['E',['H',None,None],
+                    ['I',None,None]]
+                ]
+        ]
+
+
+ptython二叉树实现       
+
+    from graphviz import Digraph
+    import uuid
+    from random import sample
+
+    # 二叉树类
+    class BTree(object):
+        # 初始化
+        def __init__(self, data=None, left=None, right=None):
+            self.data = data    # 数据域
+            self.left = left    # 左子树
+            self.right = right  # 右子树
+            self.dot = Digraph(comment='Binary Tree')
+
+        # 前序遍历
+        def preorder(self):
+
+            if self.data is not None:
+                print(self.data, end=' ')
+            if self.left is not None:
+                self.left.preorder()
+            if self.right is not None:
+                self.right.preorder()
+
+        # 中序遍历
+        def inorder(self):
+
+            if self.left is not None:
+                self.left.inorder()
+            if self.data is not None:
+                print(self.data, end=' ')
+            if self.right is not None:
+                self.right.inorder()
+
+        # 后序遍历
+        def postorder(self):
+
+            if self.left is not None:
+                self.left.postorder()
+            if self.right is not None:
+                self.right.postorder()
+            if self.data is not None:
+                print(self.data, end=' ')
+
+        # 层序遍历
+        def levelorder(self):
+
+            # 返回某个节点的左孩子
+            def LChild_Of_Node(node):
+                return node.left if node.left is not None else None
+            # 返回某个节点的右孩子
+            def RChild_Of_Node(node):
+                return node.right if node.right is not None else None
+
+            # 层序遍历列表
+            level_order = []
+            # 是否添加根节点中的数据
+            if self.data is not None:
+                level_order.append([self])
+
+            # 二叉树的高度
+            height = self.height()
+            if height >= 1:
+                # 对第二层及其以后的层数进行操作, 在level_order中添加节点而不是数据
+                for _ in range(2, height + 1):
+                    level = []  # 该层的节点
+                    for node in level_order[-1]:
+                        # 如果左孩子非空，则添加左孩子
+                        if LChild_Of_Node(node):
+                            level.append(LChild_Of_Node(node))
+                        # 如果右孩子非空，则添加右孩子
+                        if RChild_Of_Node(node):
+                            level.append(RChild_Of_Node(node))
+                    # 如果该层非空，则添加该层
+                    if level:
+                        level_order.append(level)
+
+                # 取出每层中的数据
+                for i in range(0, height):  # 层数
+                    for index in range(len(level_order[i])):
+                        level_order[i][index] = level_order[i][index].data
+
+            return level_order
+
+        # 二叉树的高度
+        def height(self):
+            # 空的树高度为0, 只有root节点的树高度为1
+            if self.data is None:
+                return 0
+            elif self.left is None and self.right is None:
+                return 1
+            elif self.left is None and self.right is not None:
+                return 1 + self.right.height()
+            elif self.left is not None and self.right is None:
+                return 1 + self.left.height()
+            else:
+                return 1 + max(self.left.height(), self.right.height())
+
+        # 二叉树的叶子节点
+        def leaves(self):
+
+            if self.data is None:
+                return None
+            elif self.left is None and self.right is None:
+                print(self.data, end=' ')
+            elif self.left is None and self.right is not None:
+                self.right.leaves()
+            elif self.right is None and self.left is not None:
+                self.left.leaves()
+            else:
+                self.left.leaves()
+                self.right.leaves()
+
+        # 利用Graphviz实现二叉树的可视化
+        def print_tree(self, save_path='./Binary_Tree.gv', label=False):
+
+            # colors for labels of nodes
+            colors = ['skyblue', 'tomato', 'orange', 'purple', 'green', 'yellow', 'pink', 'red']
+
+            # 绘制以某个节点为根节点的二叉树
+            def print_node(node, node_tag):
+                # 节点颜色
+                color = sample(colors,1)[0]
+                if node.left is not None:
+                    left_tag = str(uuid.uuid1())            # 左节点的数据
+                    self.dot.node(left_tag, str(node.left.data), style='filled', color=color)    # 左节点
+                    label_string = 'L' if label else ''    # 是否在连接线上写上标签，表明为左子树
+                    self.dot.edge(node_tag, left_tag, label=label_string)   # 左节点与其父节点的连线
+                    print_node(node.left, left_tag)
+
+                if node.right is not None:
+                    right_tag = str(uuid.uuid1())
+                    self.dot.node(right_tag, str(node.right.data), style='filled', color=color)
+                    label_string = 'R' if label else ''  # 是否在连接线上写上标签，表明为右子树
+                    self.dot.edge(node_tag, right_tag, label=label_string)
+                    print_node(node.right, right_tag)
+
+            # 如果树非空
+            if self.data is not None:
+                root_tag = str(uuid.uuid1())                # 根节点标签
+                self.dot.node(root_tag, str(self.data), style='filled', color=sample(colors,1)[0])     # 创建根节点
+                print_node(self, root_tag)
+
+            self.dot.render(save_path)                              # 保存文件为指定文件
+
+
+## 6. 优先队列
+优先队列存入的每项数据都有附加的数值，表示由优先程度。任何时候的访问和弹出都按照优先级最高的顺序。
+
+list实现优先队列：
+    
+    class PrioQue:
+        def __init__(self,elist=[]):
+            self._elems = list(elist)
+            self._elems.sort(reverse=True)   #从大到小排列
+        
+        def enqueue(self,e):
+            i = len(self._elems) - 1
+            while i>=0:
+                if self._elems[i] <=e:
+                    i -= 1
+                else:
+                    break
+            self._elems.insert(i+1,e)
+        
+        def is_empty(self):
+            return not self._elems
+
+        def peek(self):
+            if self.is_empty():
+                raise PrioQueueError("in top)
+            return self._elems[-1]
+
+        def dequeue(self):
+            if self.is_empty():
+                raise PrioQueueError("in pop)
+            return self._elems.pop()
+
+## 7.采用树形结构实现优先队列的一种有效技术为堆。
++ 在一个堆中从树根到任何一个叶节点的路径上，节点里存的数据按照优先关系递减。
++ 堆中最优元素必定位于二叉树根节点
++ 位于数不同路径上的元素不必关系优先级
+
+如果是最小元素优先，称为*小顶堆*，反之称为*大顶堆*
+
+**基于堆的优先队列类**
+
+    class PrioQueue:
+        def __init__(self,elist=[]):
+            self._elems = list(elist)
+            if elist:
+                self.buildheap()
+        def is_empty(self):
+            return not self._elems
+        
+        def peek(self):
+            if self.is_empty():
+                raise PrioQueueError('in peek')
+            return self._elems[0]
+        
+        #入队操作，主要由siftup完成
+        def enqueue(self,e):
+            self._elems.append(None)
+            self.siftup(e,len(self._elems)-1)
+
+        def siftup(self,e,last):
+            elems,i,j = self._elems,last,(last-1)//2
+            while i>0 and e < elems[j]:
+                elems[i] = elems[j]
+                i,j=j,(j-1)//2
+            elems[i] = e
+        
+        def dequeue(self):
+            if self.is_empty():
+                raise PrioQueueError('in dequeue')
+            elems = self._elems
+            e0 = elems[0]
+            e = elems.pop()
+            if len(elems) > 0 :
+                self.siftdown(e,0,len(elems))
+            return e0
+
+        def dequeue(self,e,begin,end):
+            elems,i,j = self._elems,begin,begin*2+1
+            while j< end:
+                if j+1 < end and elems[j+1] < elems[j]:         
+                #elems[j]不大于其他兄弟节点的数据
+                    j +=1
+                if e< elems[j]:
+                    break
+                elems[i] = elems[j]
+                i,j = j,2*j+1
+            elems[i] = e
+
+        def buildheap(self):
+            end = len(self._elems)
+            for i in range(end//2,-1,-1):
+                self.siftdown(self._elems[i],i,end)
+
+堆构造复杂度为O（n），插入弹出操作为O(logn)，最坏情况O(n),其他操作O(1)。
+
+
+# 八、字典和集合
+
+# 九、排序算法
+## 1. 插入排序
+平均复杂度O(n<sup>2</sup>)  ,稳定
+
+    def insert_sort(lst):
+        for i in range(1,len(lst)):     #开始时片段[0:1]已排序
+            x = lst[i]
+            j = i
+            while j>0 and lst[j-1].key >x.key:
+                lst[j] = lst[j-1]       #反序逐个后移元素，确定插入排序
+                j -= 1
+            lst[j] = x
+
+## 2. 选择排序
+
+    def select_sort(lst):
+        for i in range(len(lst)-1):   #只需循环len(lst)-1次
+            k=i                         #k是已知最小元素位置
+            for j in range(i,len(lst)): 
+                if lst[j].key < lst[k].key:
+                    k=j
+                if i != k:          #lst[k]确定最小的元素，检查是否需要交换
+                    lst[i],lst[k] = lst[k],lst[i]
+
+## 3.起泡排序
+
+    def bubble_sort(lst=[]):
+        for i in rane(len(lst):
+            found = False
+            for j in range(1,len(lst)-i):
+                if lst[j-1].key > lst[j].key :
+                lst[j-1],lst[j] = lst[j],lst[j-1]
+                found = True
+            if not found:
+                break
+
+## 快速排序
+
+    def quick_sort(lst):
+        qsort_rec(lst,0,len(lst-1))
+
+    def qsort_rec(lst,1,r):
+        if 1 >= r:
+            return          #分段无记录或只有一个记录
+        i=1
+        j=r
+        pivot = lst[i]      #lst[i]是初始空位
+        while i<j:          #找pivot的最终位置
+            while i<j and lst[j].key >= pivot.key:      #用j向左扫描小于pivot的记录
+                j-=1
+            if i<j:
+                lst[i] = lst[j]
+                i+=1        #小记录移到右边
+            while i<j and lst[i].key <= pivot.key:
+                i+=1        #用i向右扫描找大于pivot的记录
+            if i<j:
+                lst[j] = lst[i]
+                j-=1        #大记录移到右边
+            lst[i] = pivot  #将pivot存入其最终位置
+            qsort_rec(lst,1,i-1)    #递归处理左半区
+            qsort_rec(lst,i+1,r)    #递归处理右半区
+
