@@ -21,7 +21,7 @@
         return n + mysum_recursive(n-1)
     
 ## EX 2 阶乘
-<img src="images/ch02/factorial.jpg" width="350"/>
+<img src="./images/ch02/factorial.jpg" width="350"/>
     
     #O（n）
     def factorial_recursive(n):
